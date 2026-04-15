@@ -23,6 +23,7 @@ let time = (col + row) * 4;
 let clueItems = 5;
 let flagTimer = true;
 let stopGame;
+let timerId = null
 
 
 createTable();
@@ -63,9 +64,11 @@ function createTable() {
                 blockSetting.classList.remove('closeSetting');
                 blockSetting.classList.add('over');
 
+
                 if (!stopTimer.checked) {
-                    flagTimer ? startTime() : 'null';
+                    startTime();
                 }
+
 
                 if (+td.innerHTML == step) {
                     addSound('CLICK_NEW');
@@ -126,30 +129,39 @@ function getRandomArbitrary(min, max) {
 }
 
 
-function startTime(elem) {
+function startTime() {
+    // Если таймер уже запущен, не запускаем новый
+    if (timerId !== null) return;
+
     flagTimer = false;
-    stopGame = setInterval(() => {
+
+    timerId = setInterval(() => {
         timeId.textContent = --time;
+
+        if (time <= 5 && time > 0) {
+            if (timeAudio.paused) timeAudio.play();
+        }
+
         if (time <= 0) {
+            clearInterval(timerId);
+            timerId = null;
             btn.style.visibility = 'visible';
-            document.querySelector('table').classList.add('over');
+            let table = document.querySelector('table');
+            if (table) table.classList.add('over');
             addSound('GAME_OVER');
             resGame();
-        }
-        if (time <= 5) {
-            timeAudio.play();
         }
     }, 1000);
 }
 
+
+
 function resGame(num = time) {
-    clearInterval(stopGame);
+    stopTime(); // вместо clearInterval(stopGame) и сбросов вручную
     clueItems = 5;
     clue.textContent = clueItems;
     clue.style.backgroundColor = '';
     timeId.textContent = num;
-    flagTimer = true;
-    timeAudio.pause();
     blockSetting.classList.remove('over');
     container.style.flexDirection = '';
     timeId.nextElementSibling.style.display = '';
@@ -217,6 +229,16 @@ function addSound(audio) {
 }
 
 
+
+function stopTime() {
+    if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+    }
+    flagTimer = true;
+    timeAudio.pause();
+    timeAudio.currentTime = 0;
+}
 
 
 
